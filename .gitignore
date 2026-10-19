@@ -1,5 +1,4 @@
-# 打包产物
-*.exe
+# 打包产物目录（build 输出）
 packer/dist/
 packer/obj/
 
