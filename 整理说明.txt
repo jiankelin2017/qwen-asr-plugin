@@ -1,0 +1,70 @@
+Qwen ASR 插件源码整理说明
+整理日期：2026-10-14
+源码来源：C:\HEIBA\q3（原目录未做任何改动）
+当前版本：v1.28
+
+
+一、目录结构
+------------
+
+Qwen ASR 插件源码_2026-10-14/
+├── Qwen ASR.lua            Resolve 集成主脚本（Fusion UI + 全异步流程）
+├── resolve_bridge.py       Resolve 桥接入口，被 Lua 调用
+├── timeline_source.py      读取 Resolve 时间线的音频源信息（JSON 输出）
+├── worker.py               常驻后台执行器，替代 Lua 侧 os.execute
+├── asr_server.py           常驻 ASR 服务，模型只加载一次后复用
+├── asr_engine.py           ASR 识别引擎（Qwen3-ASR + ForcedAligner）
+├── subs_io.py              字幕读写桥（解决 Lua 打不开中文路径的问题）
+├── land_subtitle.py        把 SRT 落到 Resolve 字幕轨并导入媒体池
+├── export_files.py         字幕/文稿导出到指定文件夹
+├── render_to_wav.xml       渲染任务配置
+├── models.lua / models.txt 模型列表与默认模型名
+├── 使用说明.txt             面向用户的 v1.28 使用文档
+├── 整理说明.txt             本文件
+└── packer/                 打包安装器体系
+    ├── build.bat           一键打包脚本
+    ├── installer.py        安装器源码
+    ├── Qwen ASR.iss         Inno Setup 安装脚本
+    └── payload/            安装时写入 Resolve 脚本目录的载荷文件
+
+
+二、调用链
+----------
+
+Qwen ASR.lua（Resolve 菜单启动）
+  → timeline_source.py    读取时间线音频
+  → AddRenderJob 渲染音频为 WAV
+  → worker.py             后台常驻执行器
+    → asr_server.py       常驻 ASR 服务
+      → asr_engine.py     实际识别 + 强制对齐
+  → subs_io.py            读写 SRT 字幕文件
+  → land_subtitle.py      字幕落轨 + 导入媒体池
+  → export_files.py       按需导出
+
+
+三、安装位置（对应关系）
+----------------------
+
+packer/payload/ 内的文件即安装后位于
+C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\Utility\Qwen ASR\
+的文件，内容与根目录源码一致（打包时以根目录为源同步）。
+
+
+四、本次整理未包含的内容及原因
+------------------------------
+
+以下内容属于运行环境或产物，不属于源码，故未复制（原目录 C:\HEIBA\q3 中仍保留）：
+
+.venv/             约 5.0 GB，Python 虚拟环境（依赖库），可按需重建
+rt/                约 314 MB，运行时临时状态与音频渲染缓存
+__pycache__/       Python 编译缓存
+packer/dist/       11.8 MB，已打包好的安装器 exe（发布产物）
+
+
+五、备注
+--------
+
+1. 原目录 C:\HEIBA\q3 保持原样，未做移动、改名或删除。
+2. 本副本中 packer/payload/ 与根目录源码文件重复，这是打包体系的正常结构
+   （payload 为安装载荷，根目录为开发源）。
+3. 若需恢复原目录中被排除的内容，从 C:\HEIBA\q3 直接取用即可。

@@ -1,0 +1,101 @@
+══════════════════════════════════════════════════════════════════════
+ Qwen ASR 插件 · 源码备份 + 安装器打包记录
+══════════════════════════════════════════════════════════════════════
+
+备份时间：2026-10-16 11:31（卸载问题修复后重新打包）
+源码版本：v1.28
+用途    ：DaVinci Resolve 离线字幕生成插件（音频不上传）
+
+※ 本版相对 11:14 那版，修掉了两个卸载问题：
+   ① 卸载不再删掉用户的字幕输出（并自动另存一份到文档目录）
+   ② 卸载会清掉 %TEMP%\qwen3asr_dl 下载缓存
+  详见同目录下的「卸载修复说明.txt」。
+
+──────────────────────────────────────────────────────────────────────
+一、本次打包产物
+──────────────────────────────────────────────────────────────────────
+
+文件      ：Qwen ASR安装器.exe（本目录根下）
+大小      ：12,360,285 字节（约 11.79 MB）
+文件版本  ：1.28.0.0
+产品名    ：Qwen ASR 安装器
+SHA256    ：7E07D62CF16651133542A1D69912D5F4E4884FB011C1B51A5432A750A7983DC9
+
+对比修复前（12,357,947 字节）：+2,338 字节（卸载逻辑 + v1.28 缺陷修复）。
+
+※ 2026-10-17 重打包：旧 exe 文件版本仍是 1.26.0.0（改了 .iss 版本号但没重编），
+  本次已按 v1.28 重新编译；一键安装 / 一键卸载均已实测通过。
+
+──────────────────────────────────────────────────────────────────────
+二、构建环境
+──────────────────────────────────────────────────────────────────────
+
+Python      ：3.12.9（C:\HEIBA\q3\.venv）
+PyInstaller ：6.22.3（hooks-contrib 2026.8）
+Inno Setup  ：6.7.3（ISCC.exe，%LOCALAPPDATA%\Programs\Inno Setup 6\）
+构建入口    ：packer\build.ps1（或 build.bat）
+
+构建链：
+  [1/2] PyInstaller --onedir --noconsole --clean --name 安装核心
+        --add-data "payload;payload" installer.py
+        → packer\dist\安装核心\安装核心.exe
+  [2/2] ISCC "Qwen ASR.iss"
+        → packer\dist\Qwen ASR安装器.exe
+
+──────────────────────────────────────────────────────────────────────
+三、本备份目录内容
+──────────────────────────────────────────────────────────────────────
+
+根目录（源码 13 个文件）
+  Qwen ASR.lua            Resolve 集成主脚本（Fusion UI + 全异步流程）
+  resolve_bridge.py       Resolve 桥接入口，被 Lua 调用
+  timeline_source.py      读取时间线音频源信息（JSON 输出）
+  worker.py               常驻后台执行器
+  asr_server.py           常驻 ASR 服务（模型只加载一次后复用）
+  asr_engine.py           ASR 识别引擎（Qwen3-ASR + ForcedAligner）
+  subs_io.py              字幕读写桥（绕开 Lua 中文路径问题）
+  land_subtitle.py        SRT 落字幕轨 + 导入媒体池
+  export_files.py         字幕/文稿导出
+  render_to_wav.xml       渲染任务配置
+  models.lua / models.txt 模型清单与默认模型名
+  使用说明.txt             面向用户的 v1.28 文档
+  整理说明.txt             源码整理说明
+
+packer\（打包链）
+  build.bat / build.ps1   一键打包脚本
+  installer.py            安装核心源码（含 clean_cache）
+  Qwen ASR.iss            Inno Setup 脚本（含卸载备份 / 缓存清理）
+  payload\                安装载荷（12 个文件，与根目录源码逐字节一致）
+  _改前备份_卸载修复_20261016\   本次改动前的原始文件（可回滚）
+
+  ★ payload\ 内文件即安装后落到
+    ...\DaVinci Resolve\Support\Fusion\Scripts\Utility\Qwen ASR\ 的文件。
+  ★ payload 内不含 models.lua / models.txt —— 属正常：该清单由 Lua 从
+    引擎目录（ASCII_ROOT，即 {app}\q3）读取，不部署到 Resolve 脚本目录。
+
+Qwen ASR安装器.exe        本次新打好的安装包（见第一节）
+卸载修复说明.txt          本次修的两个卸载坑 + 实测验证记录
+
+未包含：packer\build\、packer\dist\安装核心\（PyInstaller 中间产物，可重建）
+
+──────────────────────────────────────────────────────────────────────
+四、还原 / 重建
+──────────────────────────────────────────────────────────────────────
+
+· 直接用：双击 Qwen ASR安装器.exe → 选安装位置 → 选 CPU 版或 GPU 版 →
+  等它自动下载运行环境与模型（1.8~4.4 GB，在线下载，未打进安装包）。
+
+· 卸载：开始菜单 → Qwen ASR → 卸载 Qwen ASR
+  （字幕会原地保留，并自动另存一份到 文档\Qwen ASR 字幕备份\）
+
+· 重新打包：进入 packer\，运行
+      powershell -ExecutionPolicy Bypass -File build.ps1
+  依赖 C:\HEIBA\q3\.venv（含 PyInstaller）与 Inno Setup 6。
+
+· 回到源码开发：本目录根下 13 个文件即开发源；packer\payload\ 需与之
+  保持同步（打包时以根目录为源）。
+
+· 回滚本次修复：用 packer\_改前备份_卸载修复_20261016\ 里的两个文件
+  覆盖 packer\Qwen ASR.iss 和 packer\installer.py，再重新打包即可。
+
+══════════════════════════════════════════════════════════════════════

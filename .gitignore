@@ -1,0 +1,19 @@
+# 打包产物
+*.exe
+packer/dist/
+packer/obj/
+
+# 备份目录
+_改前备份_*/
+_备份*/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 运行时临时与缓存
+rt/
+
+# 安装载荷引导脚本（官方文件，不入库）
+packer/payload/get-pip.py

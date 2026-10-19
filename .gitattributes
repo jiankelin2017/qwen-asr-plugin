@@ -1,0 +1,13 @@
+* text=auto
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.xml text eol=crlf
+*.lua text eol=crlf
+*.py text eol=lf
+*.iss text eol=crlf
+*.txt text eol=crlf
+models.lua text eol=crlf
+models.txt text eol=crlf
+.gitattributes text eol=crlf
+.gitignore text eol=crlf
+README.md text eol=crlf
